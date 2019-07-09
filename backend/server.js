@@ -3,6 +3,8 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var cors = require('cors')
 var app = express();
+var bcrypt = require('bcrypt');
+const saltRounds = 10;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -45,15 +47,37 @@ app.get('/',function(req,res){
     res.end('Hello World\n');
 });
 app.post('/register/user', function (req, res) {
-    res.setHeader("Access-Control-Allow-Origin", "http://127.0.0.1:8081");
+    
 
     let user = req.body.user;
-    console.log(user);
+    
     if (!user) {
         return res.status(400).send({ error:true, message: 'Please provide user' });
     }
     else{
-        return res.status(200).send({ error:false, message: user });
+       
+        let date = new Date();
+        let day = date.getDate();
+        let month = date.getMonth();
+        let year = date.getFullYear();
+        let hours = date.getHours();
+        let minutes = date.getMinutes();
+        let seconds = date.getSeconds();
+        let created_date = year+'-'+month+'-'+day+' '+hours+':'+minutes+':'+seconds; 
+        bcrypt.hash(user.password, saltRounds, function (err,   hash){
+            var sql = "INSERT into users (role,email,password,created_date) VALUES('2','"+user.email+"','"+hash+"','"+created_date+"')";
+            connection.query(sql,function(err,result){
+            
+                if(err)
+                    return res.status(404).send({ error:true, message: err });
+                else
+                    return res.status(201).send({ error:false, message: 'User Registerd Sucessfully' });
+    
+            });
+        })
+        
+        
+        
     }
   
     /*connection.query("INSERT INTO users SET ? ", { user: user }, function (error, results, fields) {
@@ -62,8 +86,8 @@ app.post('/register/user', function (req, res) {
     });*/
 });
 
-app.listen(8081, function () {
-    console.log('Node app is running on port 8081');
+app.listen(3001, function () {
+    console.log('Node app is running on port 3001');
 });
 
 module.exports = app;

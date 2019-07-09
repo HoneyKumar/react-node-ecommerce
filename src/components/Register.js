@@ -1,22 +1,21 @@
 import React from 'react';
-import {Link} from 'react-router-dom';
+import {Link,Redirect} from 'react-router-dom';
 import serverApi from '../api/server';
-import '../css/register.css'; 
+import '../css/register.css';
 class Register extends React.Component{
-    constructor(props){
-        super(props);
-        this.state = {
-                fields:{
-                    email: '',
-                    password : '',
-                    cnf_password : ''
-                },
-                errors:{
-                   
-                }
-        }
-        
+    state = {
+        fields:{
+            email: '',
+            password : '',
+            cnf_password : ''
+        },
+        errors:{
+           
+        },
+        message: '',
+        redirect : false
     }
+    
 
     handleValidation(){
         let fields = this.state.fields;
@@ -55,19 +54,23 @@ class Register extends React.Component{
         }
 
         this.setState({errors});
+        
         return formIsValid;
     }
 
     submitHandler = async (event) =>{
+        
         event.preventDefault();
         if(this.handleValidation()){
-           const registerUser = await serverApi.post('register/user',{
+           await serverApi.post('register/user',{
                         user : this.state.fields
-            }).then(function (response) {
-                console.log(response);
+            }).then((response) =>{
+                
+                this.setState({message : response.data.message,redirect:true});
+               
+                
             });
-            console.log('register User');
-            console.log(registerUser);
+            
             
         }
         else{
@@ -82,8 +85,28 @@ class Register extends React.Component{
         fields[name] = value;
         this.setState({fields});
     }
+    resetform = () =>{
+        this.setState({
+            fields: {                   // object that we want to update
+                 // keep all other key-value pairs
+                email: '',
+                password:'',
+                cnf_password:''       // update the value of specific key
+            }
+        })
+        //this.setState({...fields, email:'',password:'', cnf_password:''})
+    }
+    componentDidMount(){
+        console.log(this.state.fields);
+    }
     render(){
-       
+       const { redirect } = this.state;
+       if(redirect){
+            return <Redirect to={{
+                pathname : '/login',
+                state : {message: this.state.message}
+            }} />;
+       }
         return(
             <div>
                 <form onSubmit={this.submitHandler}>
@@ -92,13 +115,13 @@ class Register extends React.Component{
                         <p>Please fill in this form to create an account.</p>
                         <hr/>
                         <label htmlFor="email">Email</label>
-                        <input type="text" name="email" placeholder="Enter Email" onChange={this.changeHandler} value={this.state.fields.email}/>
+                        <input type="text" name="email" placeholder="Enter Email" onChange={this.changeHandler} value={this.state.fields.email} autoComplete="off" />
                         <span style={{color: "red"}}>{this.state.errors.email}</span><br />
                         <label htmlFor="password">Password</label>
-                        <input type="password" name="password" placeholder="Enter Password" onChange={this.changeHandler} value={this.state.fields.password} />
+                        <input type="password" name="password" placeholder="Enter Password" onChange={this.changeHandler} value={this.state.fields.password} autoComplete="off"  />
                         <span style={{color: "red"}}>{this.state.errors.password}</span><br />
                         <label htmlFor="Confirm password">Confirm PAssword</label>
-                        <input type="password" name="cnf_password" placeholder="Confirm Password" onChange={this.changeHandler} value={this.state.fields.cnf_password}/>
+                        <input type="password" name="cnf_password" placeholder="Confirm Password" onChange={this.changeHandler} value={this.state.fields.cnf_password} autoComplete="off" />
                         <span style={{color: "red"}}>{this.state.errors.cnf_password}</span><br />
                         <hr />
                         <p>By creating an account you agree to our <Link to="#">Terms & Privacy</Link>.</p>
